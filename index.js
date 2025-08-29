@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
 
 app.post("/save-fcm-token", async (req, res) => {
   try {
-    const { fcmtokennumber } = req.body;
+    const { fcmtokennumber, devicename } = req.body;
 
     if (!fcmtokennumber) {
       throw new Error("fcmtokennumber is required");
@@ -73,19 +73,25 @@ app.post("/save-fcm-token", async (req, res) => {
       return res.status(200).json({ 
         message: "Token already exists", 
         _id: existingToken._id, 
-        fcmtokennumber: existingToken.fcmtokennumber 
+        fcmtokennumber: existingToken.fcmtokennumber,
+        devicename: existingToken.devicename // include devicename in response
       });
     }
 
-    // Otherwise, create new
-    const newFCM = await FCM.create({ fcmtokennumber });
-    res.status(201).json({ _id: newFCM._id, fcmtokennumber: newFCM.fcmtokennumber });
+    // Create new token with devicename
+    const newFCM = await FCM.create({ fcmtokennumber, devicename });
+    res.status(201).json({ 
+      _id: newFCM._id, 
+      fcmtokennumber: newFCM.fcmtokennumber, 
+      devicename: newFCM.devicename 
+    });
 
   } catch (err) {
     console.error("Error saving token:", err.message);
     res.status(400).json({ error: err.message });
   }
 });
+
 
 app.post("/send-notification", async (req, res) => {
   const { fcmToken, title, body } = req.body;
